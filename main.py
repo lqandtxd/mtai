@@ -11,7 +11,7 @@ import logging  # 导入日志模块，用于记录程序运行信息
 import os  # 导入操作系统接口模块
 from pathlib import Path  # 导入路径处理模块
 import pyautogui  # 导入pyautogui，用于自动化鼠标键盘操作
-from typing import List, Dict, Callable, Optional, Any  # 导入类型提示模块
+from typing import List, Dict, Callable, Optional, Any, Tuple  # 导入类型提示模块
 import importlib.util  # 导入模块导入工具，用于动态导入配置文件
 
 # 从外部文件导入配置
@@ -147,6 +147,11 @@ class DesktopMonitor:
         """创建日志记录回调函数"""
         def callback(context: Dict):
             msg = message or f"检测到匹配: {context.get('match_type')}='{context.get('match_value')}'"  # 设置日志消息
+            # 在日志消息中添加坐标信息（如果存在）
+            match_x = context.get('match_x', -1)
+            match_y = context.get('match_y', -1)
+            if match_x != -1 and match_y != -1:
+                msg += f" 坐标:({match_x}, {match_y})"
             logging.info(msg)  # 记录信息日志
         return callback  # 返回回调函数
     
@@ -208,11 +213,14 @@ class DesktopMonitor:
             logging.error(f"OCR识别失败: {e}")  # 记录错误日志
             return ""  # 返回空字符串
     
-    def match_template(self, img: np.ndarray, template: np.ndarray, threshold: float) -> bool:
-        """模板匹配"""
+    def match_template(self, img: np.ndarray, template: np.ndarray, threshold: float, img_x_offset: int = 0, img_y_offset: int = 0) -> Tuple[bool, int, int]:
+        """
+        模板匹配
+        返回: (是否匹配, 匹配中心X坐标, 匹配中心Y坐标)
+        """
         try:
             if template is None:  # 检查模板是否为空
-                return False  # 返回False
+                return False, -1, -1  # 返回False和无效坐标
             
             # 执行模板匹配
             result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)  # 执行模板匹配
@@ -220,15 +228,19 @@ class DesktopMonitor:
             
             # 检查匹配度是否超过阈值
             if max_val >= threshold:  # 如果最大匹配值大于等于阈值
-                logging.info(f"模板匹配成功: 匹配度={max_val:.3f}, 阈值={threshold}")  # 记录成功日志
-                return True  # 返回True
+                h, w = template.shape[:2]  # 获取模板的高度和宽度
+                # 计算匹配区域在屏幕上的中心坐标
+                center_x = max_loc[0] + w // 2 + img_x_offset  # 中心X坐标
+                center_y = max_loc[1] + h // 2 + img_y_offset  # 中心Y坐标
+                logging.info(f"模板匹配成功: 匹配度={max_val:.3f}, 阈值={threshold}, 坐标=({center_x}, {center_y})")
+                return True, center_x, center_y  # 返回True和坐标
             else:  # 匹配度不足
-                logging.info(f"模板匹配失败: 匹配度={max_val:.3f}, 阈值={threshold}")  # 记录失败日志
-                return False  # 返回False
+                logging.info(f"模板匹配失败: 匹配度={max_val:.3f}, 阈值={threshold}")
+                return False, -1, -1  # 返回False和无效坐标
                 
         except Exception as e:  # 捕获模板匹配过程中的异常
             logging.error(f"模板匹配失败: {e}")  # 记录错误日志
-            return False  # 返回False
+            return False, -1, -1  # 返回False和无效坐标
     
     def save_screenshot(self, img: np.ndarray, timestamp: str, context: Dict[str, Any]) -> Optional[Path]:
         """保存截图"""
@@ -339,6 +351,8 @@ class DesktopMonitor:
                 # 3. 匹配检测
                 match_found = False  # 匹配标志
                 match_value = None  # 匹配值
+                match_x = -1  # 匹配中心X坐标，初始化为-1表示无效
+                match_y = -1  # 匹配中心Y坐标，初始化为-1表示无效
                 
                 if config.type == "text":  # 文字识别
                     # 文字识别
@@ -353,7 +367,10 @@ class DesktopMonitor:
                             if search_keyword in search_text:  # 检查是否包含关键词
                                 match_found = True  # 设置匹配标志
                                 match_value = text  # 保存匹配值
-                                logging.info(f"[{config.name}] 检测到关键词 '{keyword}'")  # 记录匹配信息
+                                # 计算文字识别区域的中心坐标
+                                match_x = config.x + config.width // 2
+                                match_y = config.y + config.height // 2
+                                logging.info(f"[{config.name}] 检测到关键词 '{keyword}' 坐标=({match_x}, {match_y})")
                                 break  # 找到匹配就退出循环
                     else:  # 未识别到文字
                         logging.info(f"[{config.name}] 未识别到有效文字")  # 记录信息日志
@@ -361,10 +378,12 @@ class DesktopMonitor:
                 elif config.type == "template":  # 模板匹配
                     # 模板匹配
                     if config.template_image is not None:  # 检查模板图片是否加载成功
-                        match_found = self.match_template(
+                        match_found, match_x, match_y = self.match_template(
                             processed_img,  # 当前截图
                             config.template_image,  # 模板图片
-                            config.match_threshold  # 匹配阈值
+                            config.match_threshold,  # 匹配阈值
+                            config.x,  # 传入截图区域的X偏移（用于计算屏幕绝对坐标）
+                            config.y   # 传入截图区域的Y偏移（用于计算屏幕绝对坐标）
                         )
                         if match_found:  # 如果匹配成功
                             match_value = f"匹配度_{config.match_threshold}"  # 设置匹配值
@@ -376,10 +395,12 @@ class DesktopMonitor:
                         'timestamp': timestamp,  # 时间戳
                         'match_type': config.type,  # 匹配类型
                         'match_value': match_value,  # 匹配值
-                        'x': config.x,  # X坐标
-                        'y': config.y,  # Y坐标
-                        'width': config.width,  # 宽度
-                        'height': config.height  # 高度
+                        'x': config.x,  # 检测区域X坐标
+                        'y': config.y,  # 检测区域Y坐标
+                        'width': config.width,  # 检测区域宽度
+                        'height': config.height,  # 检测区域高度
+                        'match_x': match_x,  # 匹配中心X坐标
+                        'match_y': match_y  # 匹配中心Y坐标
                     }
                     
                     # 创建并执行回调函数
@@ -394,7 +415,9 @@ class DesktopMonitor:
                     'config_name': config.name,  # 配置名称
                     'timestamp': timestamp,  # 时间戳
                     'match_type': config.type,  # 匹配类型
-                    'match_value': match_value if match_found else 'no_match'  # 匹配值或"no_match"
+                    'match_value': match_value if match_found else 'no_match',  # 匹配值或"no_match"
+                    'match_x': match_x,  # 匹配X坐标
+                    'match_y': match_y  # 匹配Y坐标
                 })
                 if screenshot_path:  # 如果截图保存成功
                     logging.info(f"[{config.name}] 截图已保存至: {screenshot_path}")  # 记录信息日志
