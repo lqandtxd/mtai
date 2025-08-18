@@ -1,0 +1,254 @@
+2025-08-18 16:28:05,891 - ERROR - Tesseract OCR 初始化失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:28:05,897 - CRITICAL - 程序启动失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:30:22,461 - ERROR - Tesseract OCR 初始化失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:30:22,461 - CRITICAL - 程序启动失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:30:32,186 - ERROR - Tesseract OCR 初始化失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:30:32,189 - CRITICAL - 程序启动失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:31:07,803 - ERROR - Tesseract OCR 初始化失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:31:07,803 - CRITICAL - 程序启动失败: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-08-18 16:32:22,266 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:32:22,267 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:32:22,272 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:32:22,272 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:32:22,273 - INFO - 截图保留时间: 24小时
+2025-08-18 16:32:22,273 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:32:22,273 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:32:22,273 - INFO - 开始执行监控任务: 20250818_163222
+2025-08-18 16:32:22,637 - INFO - 识别到的文字: 'i'
+2025-08-18 16:32:22,642 - INFO - 截图已保存: screenshots\screenshot_20250818_163222.png
+2025-08-18 16:32:22,642 - INFO - 截图已保存至: screenshots\screenshot_20250818_163222.png
+2025-08-18 16:32:54,928 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:32:54,929 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:32:54,929 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:32:54,929 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:32:54,929 - INFO - 截图保留时间: 24小时
+2025-08-18 16:32:54,929 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:32:54,930 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:32:54,930 - INFO - 开始执行监控任务: 20250818_163254
+2025-08-18 16:32:55,173 - INFO - 识别到的文字: 'a'
+2025-08-18 16:32:55,177 - INFO - 截图已保存: screenshots\screenshot_20250818_163254.png
+2025-08-18 16:32:55,177 - INFO - 截图已保存至: screenshots\screenshot_20250818_163254.png
+2025-08-18 16:33:19,624 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:33:19,625 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:33:19,625 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:33:19,625 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:33:19,625 - INFO - 截图保留时间: 24小时
+2025-08-18 16:33:19,625 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:33:19,626 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:33:19,626 - INFO - 开始执行监控任务: 20250818_163319
+2025-08-18 16:33:19,866 - INFO - 识别到的文字: 'a'
+2025-08-18 16:33:19,872 - INFO - 截图已保存: screenshots\screenshot_20250818_163319.png
+2025-08-18 16:33:19,872 - INFO - 截图已保存至: screenshots\screenshot_20250818_163319.png
+2025-08-18 16:33:49,170 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:33:49,170 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:33:49,170 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:33:49,171 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:33:49,171 - INFO - 截图保留时间: 24小时
+2025-08-18 16:33:49,171 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:33:49,171 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:33:49,171 - INFO - 开始执行监控任务: 20250818_163349
+2025-08-18 16:33:49,409 - INFO - 识别到的文字: 'a'
+2025-08-18 16:33:49,413 - INFO - 截图已保存: screenshots\screenshot_20250818_163349.png
+2025-08-18 16:33:49,413 - INFO - 截图已保存至: screenshots\screenshot_20250818_163349.png
+2025-08-18 16:35:02,091 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:35:02,091 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:35:02,091 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:35:02,091 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:35:02,092 - INFO - 截图保留时间: 24小时
+2025-08-18 16:35:02,092 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:35:02,092 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:35:02,092 - INFO - 开始执行监控任务: 20250818_163502
+2025-08-18 16:35:02,385 - INFO - 识别到的文字: 'xn
+ae 7
+s ive
+es
+Sidwalle
+dn
+tE
+Cog
+Qe'
+2025-08-18 16:35:02,399 - INFO - 截图已保存: screenshots\screenshot_20250818_163502.png
+2025-08-18 16:35:02,400 - INFO - 截图已保存至: screenshots\screenshot_20250818_163502.png
+2025-08-18 16:35:53,847 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:35:53,848 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:35:53,848 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:35:53,848 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:35:53,848 - INFO - 截图保留时间: 24小时
+2025-08-18 16:35:53,849 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:35:53,849 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:35:53,849 - INFO - 开始执行监控任务: 20250818_163553
+2025-08-18 16:35:54,180 - INFO - 识别到的文字: 'Peoelyo
+mintmMAPr TTJuJ
+ariyHenesys
+eH Henesys
+2a i meeOOOstl'
+2025-08-18 16:35:54,195 - INFO - 截图已保存: screenshots\screenshot_20250818_163553.png
+2025-08-18 16:35:54,195 - INFO - 截图已保存至: screenshots\screenshot_20250818_163553.png
+2025-08-18 16:37:50,267 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:37:50,268 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:37:50,268 - INFO - 监控区域: 屏幕左上角 100x100 像素
+2025-08-18 16:37:50,268 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:37:50,268 - INFO - 截图保留时间: 24小时
+2025-08-18 16:37:50,269 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:37:50,269 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:37:50,269 - INFO - 开始执行监控任务: 20250818_163750
+2025-08-18 16:37:50,587 - INFO - 识别到的文字: 'MagleSteryN
+ferrsTwilightPerion
+es ForsakenExcavationSite2'
+2025-08-18 16:37:50,601 - INFO - 截图已保存: screenshots\screenshot_20250818_163750.png
+2025-08-18 16:37:50,602 - INFO - 截图已保存至: screenshots\screenshot_20250818_163750.png
+2025-08-18 16:47:27,637 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:47:27,637 - INFO - 已添加识别配置: test_detector
+2025-08-18 16:47:27,637 - INFO - 已添加识别配置: login_detector
+2025-08-18 16:47:27,637 - INFO - 已添加识别配置: error_logger
+2025-08-18 16:47:27,637 - INFO - 已添加识别配置: custom_handler
+2025-08-18 16:47:27,638 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:47:27,638 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:47:27,638 - INFO - 截图保留时间: 24小时
+2025-08-18 16:47:27,638 - INFO - 安全模式: 启用（将鼠标移到屏幕左上角可中断程序）
+2025-08-18 16:47:27,638 - INFO - 配置的识别区域数量: 4
+2025-08-18 16:47:27,638 - INFO -   - test_detector: (0,0,100,100) 关键词: [test]
+2025-08-18 16:47:27,638 - INFO -   - login_detector: (200,200,150,50) 关键词: [login, 登录]
+2025-08-18 16:47:27,639 - INFO -   - error_logger: (500,500,200,100) 关键词: [error, 错误, failed]
+2025-08-18 16:47:27,639 - INFO -   - custom_handler: (800,100,120,80) 关键词: [urgent, 紧急]
+2025-08-18 16:47:27,639 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:47:27,639 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:47:27,639 - INFO - 开始执行监控任务: 20250818_164727
+2025-08-18 16:47:27,639 - INFO - 处理识别区域: test_detector
+2025-08-18 16:47:27,863 - INFO - [test_detector] 识别到的文字: 'Lyte
+Maple'
+2025-08-18 16:47:27,864 - INFO - [test_detector] 未检测到指定关键词
+2025-08-18 16:47:27,868 - INFO - 截图已保存: screenshots\test_detector_20250818_164727_LyteMaple.png
+2025-08-18 16:47:27,868 - INFO - [test_detector] 截图已保存至: screenshots\test_detector_20250818_164727_LyteMaple.png
+2025-08-18 16:47:27,868 - INFO - 处理识别区域: login_detector
+2025-08-18 16:47:28,062 - INFO - [login_detector] 未识别到有效文字
+2025-08-18 16:47:28,067 - INFO - 截图已保存: screenshots\login_detector_20250818_164727_.png
+2025-08-18 16:47:28,067 - INFO - [login_detector] 截图已保存至: screenshots\login_detector_20250818_164727_.png
+2025-08-18 16:47:28,067 - INFO - 处理识别区域: error_logger
+2025-08-18 16:47:28,261 - INFO - [error_logger] 识别到的文字: 'i
+so'
+2025-08-18 16:47:28,262 - INFO - [error_logger] 未检测到指定关键词
+2025-08-18 16:47:28,267 - INFO - 截图已保存: screenshots\error_logger_20250818_164727_iso.png
+2025-08-18 16:47:28,267 - INFO - [error_logger] 截图已保存至: screenshots\error_logger_20250818_164727_iso.png
+2025-08-18 16:47:28,267 - INFO - 处理识别区域: custom_handler
+2025-08-18 16:47:28,469 - INFO - [custom_handler] 识别到的文字: 'fSEweRES'
+2025-08-18 16:47:28,469 - INFO - [custom_handler] 未检测到指定关键词
+2025-08-18 16:47:28,474 - INFO - 截图已保存: screenshots\custom_handler_20250818_164727_fSEweRES.png
+2025-08-18 16:47:28,474 - INFO - [custom_handler] 截图已保存至: screenshots\custom_handler_20250818_164727_fSEweRES.png
+2025-08-18 16:50:56,155 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:50:56,155 - INFO - 已添加识别配置: test_detector
+2025-08-18 16:50:56,156 - INFO - 已添加识别配置: login_detector
+2025-08-18 16:50:56,156 - INFO - 已添加识别配置: error_logger
+2025-08-18 16:50:56,156 - CRITICAL - 程序启动失败: name 'config4' is not defined
+2025-08-18 16:56:22,085 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:56:22,085 - INFO - 已自动加载配置: test_detector
+2025-08-18 16:56:22,085 - INFO - 已自动加载配置: login_detector
+2025-08-18 16:56:22,085 - INFO - 已自动加载配置: error_logger
+2025-08-18 16:56:22,085 - INFO - 已自动加载配置: urgent_handler
+2025-08-18 16:56:22,086 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:56:22,086 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:56:22,086 - INFO - 截图保留时间: 24小时
+2025-08-18 16:56:22,086 - INFO - 安全模式: 启用（将鼠标移到屏幕左上角可中断程序）
+2025-08-18 16:56:22,086 - INFO - 配置的识别区域数量: 4
+2025-08-18 16:56:22,087 - INFO -   - test_detector: (0,0,100,100) 关键词: [test]
+2025-08-18 16:56:22,087 - INFO -   - login_detector: (200,200,150,50) 关键词: [login, 登录]
+2025-08-18 16:56:22,087 - INFO -   - error_logger: (500,500,200,100) 关键词: [error, 错误, failed]
+2025-08-18 16:56:22,087 - INFO -   - urgent_handler: (800,100,120,80) 关键词: [urgent, 紧急]
+2025-08-18 16:56:22,087 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:56:22,087 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:56:22,088 - INFO - 开始执行监控任务: 20250818_165622
+2025-08-18 16:56:22,088 - INFO - 处理识别区域: test_detector
+2025-08-18 16:56:22,328 - INFO - [test_detector] 识别到的文字: 'Lyte
+Maple'
+2025-08-18 16:56:22,328 - INFO - [test_detector] 未检测到指定关键词
+2025-08-18 16:56:22,332 - INFO - 截图已保存: screenshots\test_detector_20250818_165622_LyteMaple.png
+2025-08-18 16:56:22,332 - INFO - [test_detector] 截图已保存至: screenshots\test_detector_20250818_165622_LyteMaple.png
+2025-08-18 16:56:22,333 - INFO - 处理识别区域: login_detector
+2025-08-18 16:56:22,521 - INFO - [login_detector] 未识别到有效文字
+2025-08-18 16:56:22,525 - INFO - 截图已保存: screenshots\login_detector_20250818_165622_.png
+2025-08-18 16:56:22,525 - INFO - [login_detector] 截图已保存至: screenshots\login_detector_20250818_165622_.png
+2025-08-18 16:56:22,526 - INFO - 处理识别区域: error_logger
+2025-08-18 16:56:22,733 - INFO - [error_logger] 识别到的文字: 'i
+so'
+2025-08-18 16:56:22,733 - INFO - [error_logger] 未检测到指定关键词
+2025-08-18 16:56:22,738 - INFO - 截图已保存: screenshots\error_logger_20250818_165622_iso.png
+2025-08-18 16:56:22,738 - INFO - [error_logger] 截图已保存至: screenshots\error_logger_20250818_165622_iso.png
+2025-08-18 16:56:22,738 - INFO - 处理识别区域: urgent_handler
+2025-08-18 16:56:22,933 - INFO - [urgent_handler] 识别到的文字: 'fSEweRES'
+2025-08-18 16:56:22,934 - INFO - [urgent_handler] 未检测到指定关键词
+2025-08-18 16:56:22,939 - INFO - 截图已保存: screenshots\urgent_handler_20250818_165622_fSEweRES.png
+2025-08-18 16:56:22,939 - INFO - [urgent_handler] 截图已保存至: screenshots\urgent_handler_20250818_165622_fSEweRES.png
+2025-08-18 16:57:45,533 - INFO - Tesseract OCR 初始化成功
+2025-08-18 16:57:45,533 - INFO - 已自动加载配置: test_detector
+2025-08-18 16:57:45,533 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 16:57:45,534 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 16:57:45,534 - INFO - 截图保留时间: 24小时
+2025-08-18 16:57:45,534 - INFO - 安全模式: 启用（将鼠标移到屏幕左上角可中断程序）
+2025-08-18 16:57:45,534 - INFO - 配置的识别区域数量: 1
+2025-08-18 16:57:45,534 - INFO -   - test_detector: (0,0,300,300) 关键词: [forsaken]
+2025-08-18 16:57:45,534 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 16:57:45,534 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 16:57:45,535 - INFO - 开始执行监控任务: 20250818_165745
+2025-08-18 16:57:45,535 - INFO - 处理识别区域: test_detector
+2025-08-18 16:57:45,832 - INFO - [test_detector] 识别到的文字: 'MagleSteryN
+ferrsTwilightPerion
+es ForsakenExcavationSite2'
+2025-08-18 16:57:45,833 - INFO - [test_detector] 检测到关键词 'forsaken'
+2025-08-18 16:57:45,833 - INFO - 执行鼠标点击回调: 点击(30, 30), 检测到文字: 'MagleSteryN
+ferrsTwilightPerion
+es ForsakenExcavationSite2'
+2025-08-18 16:57:46,467 - INFO - 鼠标已点击坐标: (30, 30)
+2025-08-18 16:57:46,480 - INFO - 截图已保存: screenshots\test_detector_20250818_165745_MagleSteryNferrsTwilightPeriones ForsakenExcavatio.png
+2025-08-18 16:57:46,480 - INFO - [test_detector] 截图已保存至: screenshots\test_detector_20250818_165745_MagleSteryNferrsTwilightPeriones ForsakenExcavatio.png
+2025-08-18 17:15:04,496 - INFO - Tesseract OCR 初始化成功
+2025-08-18 17:15:04,496 - INFO - 跳过禁用的配置: login_button
+2025-08-18 17:15:04,496 - INFO - 已创建配置: error_message
+2025-08-18 17:15:04,496 - INFO - 跳过禁用的配置: welcome_text
+2025-08-18 17:15:04,497 - INFO - 跳过禁用的配置: test_template
+2025-08-18 17:15:04,497 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 17:15:04,497 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 17:15:04,497 - INFO - 截图保留时间: 24小时
+2025-08-18 17:15:04,497 - INFO - 安全模式: 启用（将鼠标移到屏幕左上角可中断程序）
+2025-08-18 17:15:04,497 - INFO - 启用的识别配置数量: 1
+2025-08-18 17:15:04,497 - INFO -   - error_message: (20,20,300,300) 类型: 文字识别, 关键词: [twilight]
+2025-08-18 17:15:04,498 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 17:15:04,498 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 17:15:04,498 - INFO - 开始执行监控任务: 20250818_171504
+2025-08-18 17:15:04,498 - INFO - 处理识别区域: error_message
+2025-08-18 17:15:04,818 - INFO - [error_message] 识别到的文字: '28S
+MapleStoryN
+rinaeDAUCrre
+7eTwilightPerion
+a TwilightPerion
+er
+eM4 4'
+2025-08-18 17:15:04,819 - INFO - [error_message] 检测到关键词 'twilight'
+2025-08-18 17:15:04,819 - INFO - 检测到错误信息！
+2025-08-18 17:15:04,834 - INFO - 截图已保存: screenshots\error_message_text_20250818_171504_28SMapleStoryNrinaeDAUCrre7eTwilightPeriona Twilig.png
+2025-08-18 17:15:04,834 - INFO - [error_message] 截图已保存至: screenshots\error_message_text_20250818_171504_28SMapleStoryNrinaeDAUCrre7eTwilightPeriona Twilig.png
+2025-08-18 17:21:13,701 - INFO - Tesseract OCR 初始化成功
+2025-08-18 17:21:13,701 - INFO - 跳过禁用的配置: login_button
+2025-08-18 17:21:13,701 - INFO - 已创建配置: error_message
+2025-08-18 17:21:13,702 - INFO - 跳过禁用的配置: welcome_text
+2025-08-18 17:21:13,702 - INFO - 跳过禁用的配置: test_template
+2025-08-18 17:21:13,702 - INFO - 启动桌面监控服务，每1分钟执行一次
+2025-08-18 17:21:13,702 - INFO - 截图保存目录: C:\Users\60548\Desktop\program\mt\screenshots
+2025-08-18 17:21:13,702 - INFO - 截图保留时间: 24小时
+2025-08-18 17:21:13,702 - INFO - 安全模式: 启用（将鼠标移到屏幕左上角可中断程序）
+2025-08-18 17:21:13,703 - INFO - 启用的识别配置数量: 1
+2025-08-18 17:21:13,703 - INFO -   - error_message: (20,20,300,300) 类型: 文字识别, 关键词: [twilight]
+2025-08-18 17:21:13,703 - INFO - 按 Ctrl+C 停止监控
+2025-08-18 17:21:13,703 - INFO - 已设置自动清理任务，每 1 小时检查一次过期文件
+2025-08-18 17:21:13,703 - INFO - 开始执行监控任务: 20250818_172113
+2025-08-18 17:21:13,703 - INFO - 处理识别区域: error_message
+2025-08-18 17:21:14,028 - INFO - [error_message] 识别到的文字: '28S
+MapleStoryN
+rinaeDAUCrre
+7eTwilightPerion
+a TwilightPerion
+er
+eM4 4'
+2025-08-18 17:21:14,029 - INFO - [error_message] 检测到关键词 'twilight'
+2025-08-18 17:21:14,029 - INFO - 检测到错误信息！
+2025-08-18 17:21:14,043 - INFO - 截图已保存: screenshots\error_message_text_20250818_172113_28SMapleStoryNrinaeDAUCrre7eTwilightPeriona Twilig.png
+2025-08-18 17:21:14,044 - INFO - [error_message] 截图已保存至: screenshots\error_message_text_20250818_172113_28SMapleStoryNrinaeDAUCrre7eTwilightPeriona Twilig.png
