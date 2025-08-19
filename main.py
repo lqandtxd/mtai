@@ -87,6 +87,7 @@ def capture_screen(region: Dict[str, int] = None) -> Optional[Image.Image]:
         如果失败返回None
     """
     try:
+        
         if region is None:
             # 截取全屏
             screenshot = ImageGrab.grab()
@@ -103,15 +104,22 @@ def capture_screen(region: Dict[str, int] = None) -> Optional[Image.Image]:
         # 保存截图（如果需要）
         if config.GLOBAL_CONFIG["screenshot_dir"]:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            filename = f"screenshot_{timestamp}.png"
-            filepath = os.path.join(config.GLOBAL_CONFIG["screenshot_dir"], filename)
+            base_filename = f"screenshot_{timestamp}"
+            base_filepath = os.path.join(config.GLOBAL_CONFIG["screenshot_dir"], base_filename)
             
             # 确保目录存在
             os.makedirs(config.GLOBAL_CONFIG["screenshot_dir"], exist_ok=True)
             
-            # 保存截图
-            screenshot.save(filepath, quality=config.GLOBAL_CONFIG["screenshot_quality"])
-            logging.debug(f"截图已保存: {filename}")
+            # 保存原始截图
+            original_path = f"{base_filepath}.png"
+            screenshot.save(original_path, quality=config.GLOBAL_CONFIG["screenshot_quality"])
+            logging.debug(f"原始截图已保存: {original_path}")
+            
+            # 转换为灰度图并保存
+            gray_screenshot = screenshot.convert("L")  # "L"模式表示灰度图
+            gray_path = f"{base_filepath}_gray.png"
+            gray_screenshot.save(gray_path, quality=config.GLOBAL_CONFIG["screenshot_quality"])
+            logging.debug(f"灰度处理后的截图已保存: {gray_path}")
         
         return screenshot
         
@@ -241,11 +249,30 @@ def template_match(screen_image: np.ndarray, template_path: str, threshold: floa
             logging.error(f"模板文件不存在: {template_path}")
             return None
         
-        # 读取模板图像
-        template = cv2.imread(template_path, 0)  # 以灰度模式读取
+        # 读取模板图像（以灰度模式）
+        template = cv2.imread(template_path, 0)  # 0表示灰度模式读取
         if template is None:
             logging.error(f"无法读取模板文件: {template_path}")
             return None
+        
+        # 保存灰度模式的模板图（新增逻辑）
+        if config.GLOBAL_CONFIG["screenshot_dir"]:
+            # 生成保存路径（在截图目录下创建templates子目录）
+            template_dir = os.path.join(config.GLOBAL_CONFIG["screenshot_dir"], "templates")
+            os.makedirs(template_dir, exist_ok=True)
+            
+            # 提取原模板文件名并添加"_gray"后缀
+            template_name = os.path.basename(template_path)
+            name, ext = os.path.splitext(template_name)
+            gray_template_name = f"{name}_gray{ext}"
+            gray_template_path = os.path.join(template_dir, gray_template_name)
+            
+            # 保存灰度模板
+            success = cv2.imwrite(gray_template_path, template)
+            if success:
+                logging.debug(f"灰度模板已保存: {gray_template_path}")
+            else:
+                logging.warning(f"无法保存灰度模板: {gray_template_path}")
         
         # 获取模板尺寸
         h, w = template.shape
@@ -269,7 +296,7 @@ def template_match(screen_image: np.ndarray, template_path: str, threshold: floa
     except Exception as e:
         logging.error(f"模板匹配失败: {e}")
         return None
-
+    
 # ==================== 回调函数执行 ====================
 
 def execute_callback(config: Dict[str, Any], match_position: Dict[str, int] = None):
@@ -497,14 +524,21 @@ def template_detection(config: Dict[str, Any], level: int) -> bool:
     """
     indent = "  " * (level - 1)
     
-    # 截取全屏用于模板匹配
-    full_screenshot = capture_screen()
-    if full_screenshot is None:
-        logging.error(f"{indent}全屏截图失败")
+     # 截取指定区域
+    region = {
+        "x": config["x"],
+        "y": config["y"],
+        "width": config["width"],
+        "height": config["height"]
+    }
+    
+    screenshot = capture_screen(region)
+    if screenshot is None:
+        logging.error(f"{indent}截图失败")
         return False
     
-    # 转换为灰度图
-    gray_screen = cv2.cvtColor(np.array(full_screenshot), cv2.COLOR_RGB2GRAY)
+    # 屏幕截图转为灰度图
+    gray_screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
     
     # 执行模板匹配
     match_result = template_match(

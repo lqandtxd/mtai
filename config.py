@@ -95,7 +95,7 @@ RECOGNITION_CONFIGS = [
         # True：启用该检测任务
         # False：禁用该检测任务（但仍保留在配置中）
         # 可用于临时关闭某个检测而不删除配置
-        "enabled": True,
+        "enabled": False,
         
         # 配置名称
         # 用于标识和日志记录
@@ -252,19 +252,19 @@ RECOGNITION_CONFIGS = [
     # 模板匹配示例配置
     # 展示如何使用图像模板进行匹配
     {
-        "enabled": False,
+        "enabled": True,
         "name": "模板匹配检测",
         "type": "template",  # 使用模板匹配方式
-        "x": 200,
-        "y": 200,
-        "width": 400,
-        "height": 300,
+        "x": 1000,
+        "y": 0,
+        "width": 1000,
+        "height": 200,
         
         # 模板图片路径
         # 用于模板匹配的参考图片文件路径
         # 图片应该是灰度图或可以转换为灰度图
         # 推荐使用PNG格式，保持图像质量
-        "template_path": "template.png",
+        "template_path": "./templates/dead.png",
         
         # 匹配阈值
         # 匹配相似度阈值，范围0.0-1.0
@@ -280,26 +280,26 @@ RECOGNITION_CONFIGS = [
         },
         
         # 坐标偏移量
-        "coord_offset_x": 10,
-        "coord_offset_y": 10,
+        # "coord_offset_x": 10,
+        # "coord_offset_y": 10,
         
-        # 模板匹配后的嵌套检测
-        "nested_detection": {
-            "name": "模板后文字检测",
-            "type": "text",
-            "width": 200,
-            "height": 100,
-            "keywords": ["确认"],
-            "callback_type": "logging",
-            "callback_params": {
-                # x,y是相对于模板匹配中心点的坐标
-                "x": 0,  # 在匹配点上点击
-                "y": 0,
-                "clicks": 1  # 点击次数
-            },
-            "coord_offset_x": 20,  # 再次偏移
-            "coord_offset_y": 20
-        }
+        # # 模板匹配后的嵌套检测
+        # "nested_detection": {
+        #     "name": "模板后文字检测",
+        #     "type": "text",
+        #     "width": 200,
+        #     "height": 100,
+        #     "keywords": ["确认"],
+        #     "callback_type": "logging",
+        #     "callback_params": {
+        #         # x,y是相对于模板匹配中心点的坐标
+        #         "x": 0,  # 在匹配点上点击
+        #         "y": 0,
+        #         "clicks": 1  # 点击次数
+        #     },
+        #     "coord_offset_x": 20,  # 再次偏移
+        #     "coord_offset_y": 20
+        # }
     },
 ]
 
