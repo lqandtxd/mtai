@@ -1,484 +1,660 @@
-# main.py (主程序)
-import time  # 导入时间模块，用于延时和时间操作
-import schedule  # 导入调度模块，用于定时任务
-from PIL import Image  # 导入PIL库的Image模块，用于图像处理
-import pytesseract  # 导入pytesseract，用于OCR文字识别
-import numpy as np  # 导入numpy，用于数值计算和数组操作
-import cv2  # 导入opencv，用于计算机视觉和图像处理
-from datetime import datetime, timedelta  # 导入日期时间模块
-import mss  # 导入mss，用于快速屏幕截图
-import logging  # 导入日志模块，用于记录程序运行信息
-import os  # 导入操作系统接口模块
-from pathlib import Path  # 导入路径处理模块
-import pyautogui  # 导入pyautogui，用于自动化鼠标键盘操作
-from typing import List, Dict, Callable, Optional, Any, Tuple  # 导入类型提示模块
-import importlib.util  # 导入模块导入工具，用于动态导入配置文件
+# main.py - 主程序文件
+"""
+文件名称：main.py
+功能描述：本文件是程序的主逻辑文件，包含所有核心功能的实现。
+设计特点：
+    1. 包含程序的主要逻辑和功能实现
+    2. 依赖config.py中的配置
+    3. 实现了可配置的监控间隔
+    4. 所有关键代码都有详细中文注释
 
-# 从外部文件导入配置
-def load_config():
-    """从config.py文件加载配置"""
-    config_path = Path("config.py")  # 创建配置文件路径对象
-    if not config_path.exists():  # 检查配置文件是否存在
-        raise FileNotFoundError(f"配置文件 {config_path} 不存在")  # 如果不存在则抛出异常
-    
-    spec = importlib.util.spec_from_file_location("config", config_path)  # 创建模块规格
-    config = importlib.util.module_from_spec(spec)  # 创建模块对象
-    spec.loader.exec_module(config)  # 执行模块代码
-    
-    return config.GLOBAL_CONFIG, config.RECOGNITION_CONFIGS  # 返回全局配置和识别配置
+使用方法：
+    python main.py
+    或通过运行config.py启动
 
-# 加载配置
+注意事项：
+    - 需要与config.py文件在同一目录
+    - 需要安装必要的依赖库
+"""
+
+# 导入必要的标准库
+import time
+import os
+import sys
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+import shutil
+
+# 导入第三方库
+# 注意：这些库需要提前安装
+# 安装命令：pip install pytesseract pillow opencv-python pyautogui
 try:
-    GLOBAL_CONFIG, RECOGNITION_CONFIGS = load_config()  # 尝试加载配置文件
-except Exception as e:  # 捕获加载配置时可能发生的异常
-    print(f"加载配置文件失败: {e}")  # 打印错误信息
-    print("请确保config.py文件存在且格式正确")  # 提示用户检查配置文件
-    exit(1)  # 退出程序
+    import pytesseract
+    from PIL import Image, ImageGrab
+    import cv2
+    import numpy as np
+    import pyautogui
+except ImportError as e:
+    print(f"缺少必要的依赖库: {e}")
+    print("请运行: pip install pytesseract pillow opencv-python pyautogui")
+    sys.exit(1)
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,  # 设置日志级别为INFO
-    format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
-    handlers=[  # 设置日志处理器
-        logging.FileHandler('screenshot_ocr.log'),  # 文件处理器，将日志写入文件
-        logging.StreamHandler()  # 控制台处理器，将日志输出到控制台
-    ]
-)
+# 导入配置文件
+# config.py应该与本文件在同一目录
+try:
+    import config
+except ImportError:
+    print("无法导入config.py，请确保文件存在且在同一目录")
+    sys.exit(1)
 
-class RecognitionConfig:
-    """识别配置项"""
-    def __init__(self, config_data: Dict):
-        """初始化识别配置"""
-        self.enabled = config_data.get("enabled", True)  # 获取启用状态，默认为True
-        self.name = config_data["name"]  # 获取配置名称
-        self.type = config_data.get("type", "text")  # 获取识别类型，默认为"text"
-        self.x = config_data["x"]  # 获取区域X坐标
-        self.y = config_data["y"]  # 获取区域Y坐标
-        self.width = config_data["width"]  # 获取区域宽度
-        self.height = config_data["height"]  # 获取区域高度
-        self.callback_type = config_data["callback_type"]  # 获取回调类型
-        self.callback_params = config_data["callback_params"]  # 获取回调参数
-        
-        # 文字识别相关配置
-        if self.type == "text":  # 如果是文字识别类型
-            self.keywords = config_data.get("keywords", [])  # 获取关键词列表，默认为空列表
-            self.case_sensitive = config_data.get("case_sensitive", False)  # 获取是否区分大小写，默认为False
-            self.ocr_lang = config_data.get("ocr_lang", GLOBAL_CONFIG["ocr_lang"])  # 获取OCR语言，默认使用全局配置
-        
-        # 模板匹配相关配置
-        elif self.type == "template":  # 如果是模板匹配类型
-            self.template_path = config_data["template_path"]  # 获取模板图片路径
-            self.match_threshold = config_data.get("match_threshold", 0.8)  # 获取匹配阈值，默认为0.8
-            self.template_image = self._load_template()  # 加载模板图片
-    
-    def _load_template(self) -> Optional[np.ndarray]:
-        """加载模板图片"""
-        try:
-            template_path = Path(self.template_path)  # 创建模板图片路径对象
-            if not template_path.exists():  # 检查模板图片文件是否存在
-                logging.error(f"模板图片不存在: {self.template_path}")  # 记录错误日志
-                return None  # 返回None
-            
-            template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)  # 读取模板图片为灰度图
-            if template is None:  # 检查图片是否成功读取
-                logging.error(f"无法读取模板图片: {self.template_path}")  # 记录错误日志
-                return None  # 返回None
-            
-            logging.info(f"模板图片已加载: {self.template_path}")  # 记录信息日志
-            return template  # 返回模板图片数据
-            
-        except Exception as e:  # 捕获加载过程中可能发生的异常
-            logging.error(f"加载模板图片失败 {self.template_path}: {e}")  # 记录错误日志
-            return None  # 返回None
+# ==================== 日志系统初始化 ====================
 
-class DesktopMonitor:
-    def __init__(self):
-        """
-        初始化桌面监控器
-        """
-        self.screenshot_dir = Path(GLOBAL_CONFIG["screenshot_dir"])  # 创建截图目录路径对象
-        self.screenshot_dir.mkdir(exist_ok=True)  # 创建截图目录，如果已存在则不报错
-        
-        self.sct = mss.mss()  # 创建mss截图对象
-        
-        # 验证Tesseract
-        try:
-            pytesseract.get_tesseract_version()  # 尝试获取Tesseract版本
-            logging.info("Tesseract OCR 初始化成功")  # 记录信息日志
-        except Exception as e:  # 捕获初始化失败的异常
-            logging.error(f"Tesseract OCR 初始化失败: {e}")  # 记录错误日志
-            raise  # 重新抛出异常
-        
-        # 创建配置实例
-        self.recognition_configs = self._create_configs()  # 创建识别配置实例列表
-        
-        # 配置pyautogui
-        pyautogui.FAILSAFE = True  # 启用安全模式，鼠标移到屏幕左上角可中断程序
-        pyautogui.PAUSE = 0.5  # 设置pyautogui操作之间的默认暂停时间
+def setup_logging():
+    """初始化日志系统"""
+    # 创建日志格式
+    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
     
-    def _create_configs(self) -> List[RecognitionConfig]:
-        """创建配置实例"""
-        configs = []  # 创建空的配置列表
-        for config_data in RECOGNITION_CONFIGS:  # 遍历配置数据
-            if config_data.get("enabled", True):  # 检查配置是否启用
-                config = RecognitionConfig(config_data)  # 创建配置实例
-                configs.append(config)  # 添加到配置列表
-                logging.info(f"已创建配置: {config.name}")  # 记录信息日志
-            else:
-                logging.info(f"跳过禁用的配置: {config_data['name']}")  # 记录跳过禁用配置的信息
-        
-        return configs  # 返回配置实例列表
+    # 配置根日志记录器
+    logging.basicConfig(
+        level=logging.DEBUG if config.GLOBAL_CONFIG["debug_mode"] else logging.INFO,
+        format=log_format,
+        datefmt=date_format,
+        handlers=[
+            # 文件处理器：将日志写入文件
+            logging.FileHandler(config.GLOBAL_CONFIG["log_file"], encoding='utf-8'),
+            # 控制台处理器：将日志输出到控制台
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
     
-    def create_mouse_click_callback(self, x: int, y: int, clicks: int = 1) -> Callable:
-        """创建鼠标点击回调函数"""
-        def callback(context: Dict):
-            logging.info(f"执行鼠标点击回调: 点击({x}, {y})")  # 记录信息日志
-            self.perform_mouse_click(x, y, clicks)  # 执行鼠标点击
-        return callback  # 返回回调函数
-    
-    def create_keyboard_input_callback(self, text: str) -> Callable:
-        """创建键盘输入回调函数"""
-        def callback(context: Dict):
-            logging.info(f"执行键盘输入回调: 输入'{text}'")  # 记录信息日志
-            self.perform_keyboard_input(text)  # 执行键盘输入
-        return callback  # 返回回调函数
-    
-    def create_logging_callback(self, message: str = None) -> Callable:
-        """创建日志记录回调函数"""
-        def callback(context: Dict):
-            msg = message or f"检测到匹配: {context.get('match_type')}='{context.get('match_value')}'"  # 设置日志消息
-            # 在日志消息中添加坐标信息（如果存在）
-            match_x = context.get('match_x', -1)
-            match_y = context.get('match_y', -1)
-            if match_x != -1 and match_y != -1:
-                msg += f" 坐标:({match_x}, {match_y})"
-            logging.info(msg)  # 记录信息日志
-        return callback  # 返回回调函数
-    
-    def capture_screen_region(self, x: int, y: int, width: int, height: int) -> Optional[np.ndarray]:
-        """截取屏幕指定区域"""
-        try:
-            monitor = {  # 创建监控区域字典
-                "top": y,  # 顶部坐标
-                "left": x,  # 左侧坐标
-                "width": width,  # 宽度
-                "height": height  # 高度
-            }
-            
-            screenshot = self.sct.grab(monitor)  # 执行截图
-            img = np.array(screenshot)  # 转换为numpy数组
-            img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)  # 转换颜色格式
-            
-            return img  # 返回图像数据
-            
-        except Exception as e:  # 捕获截图过程中的异常
-            logging.error(f"截图失败: {e}")  # 记录错误日志
-            return None  # 返回None
-    
-    def preprocess_image_for_ocr(self, img: np.ndarray) -> np.ndarray:
-        """为OCR识别预处理图像"""
-        try:
-            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)  # 转换为灰度图
-            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))  # 创建CLAHE对象
-            enhanced = clahe.apply(gray)  # 应用CLAHE增强
-            _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)  # 二值化处理
-            scale_factor = 2  # 设置缩放因子
-            binary = cv2.resize(binary, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)  # 放大图像
-            
-            return binary  # 返回预处理后的图像
-            
-        except Exception as e:  # 捕获预处理过程中的异常
-            logging.error(f"图像预处理失败: {e}")  # 记录错误日志
-            return img if len(img.shape) == 2 else cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)  # 返回原始图像或灰度图
-    
-    def preprocess_image_for_template(self, img: np.ndarray) -> np.ndarray:
-        """为模板匹配预处理图像"""
-        try:
-            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)  # 转换为灰度图
-            # 可以添加更多模板匹配专用的预处理
-            return gray  # 返回灰度图
-        except Exception as e:  # 捕获预处理过程中的异常
-            logging.error(f"模板匹配图像预处理失败: {e}")  # 记录错误日志
-            return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)  # 返回灰度图
-    
-    def extract_text(self, img: np.ndarray, ocr_lang: str) -> str:
-        """从图像中提取文字"""
-        try:
-            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ --dpi 300'  # OCR配置参数
-            
-            text = pytesseract.image_to_string(img, lang=ocr_lang, config=custom_config)  # 执行OCR识别
-            return text.strip()  # 返回去除首尾空白的文字
-            
-        except Exception as e:  # 捕获OCR识别过程中的异常
-            logging.error(f"OCR识别失败: {e}")  # 记录错误日志
-            return ""  # 返回空字符串
-    
-    def match_template(self, img: np.ndarray, template: np.ndarray, threshold: float, img_x_offset: int = 0, img_y_offset: int = 0) -> Tuple[bool, int, int]:
-        """
-        模板匹配
-        返回: (是否匹配, 匹配中心X坐标, 匹配中心Y坐标)
-        """
-        try:
-            if template is None:  # 检查模板是否为空
-                return False, -1, -1  # 返回False和无效坐标
-            
-            # 执行模板匹配
-            result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)  # 执行模板匹配
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)  # 获取匹配结果
-            
-            # 检查匹配度是否超过阈值
-            if max_val >= threshold:  # 如果最大匹配值大于等于阈值
-                h, w = template.shape[:2]  # 获取模板的高度和宽度
-                # 计算匹配区域在屏幕上的中心坐标
-                center_x = max_loc[0] + w // 2 + img_x_offset  # 中心X坐标
-                center_y = max_loc[1] + h // 2 + img_y_offset  # 中心Y坐标
-                logging.info(f"模板匹配成功: 匹配度={max_val:.3f}, 阈值={threshold}, 坐标=({center_x}, {center_y})")
-                return True, center_x, center_y  # 返回True和坐标
-            else:  # 匹配度不足
-                logging.info(f"模板匹配失败: 匹配度={max_val:.3f}, 阈值={threshold}")
-                return False, -1, -1  # 返回False和无效坐标
-                
-        except Exception as e:  # 捕获模板匹配过程中的异常
-            logging.error(f"模板匹配失败: {e}")  # 记录错误日志
-            return False, -1, -1  # 返回False和无效坐标
-    
-    def save_screenshot(self, img: np.ndarray, timestamp: str, context: Dict[str, Any]) -> Optional[Path]:
-        """保存截图"""
-        try:
-            config_name = context.get('config_name', 'unknown')  # 获取配置名称
-            match_type = context.get('match_type', 'unknown')  # 获取匹配类型
-            match_value = context.get('match_value', 'unknown')  # 获取匹配值
-            safe_value = "".join(c for c in str(match_value) if c.isalnum() or c in ' _-')[:50]  # 创建安全的文件名
-            
-            filename = f"{config_name}_{match_type}_{timestamp}_{safe_value}.png"  # 构建文件名
-            filepath = self.screenshot_dir / filename  # 创建文件路径
-            
-            debug_img = Image.fromarray(img)  # 将numpy数组转换为PIL图像
-            debug_img.save(filepath, quality=95)  # 保存图像
-            
-            logging.info(f"截图已保存: {filepath}")  # 记录信息日志
-            return filepath  # 返回文件路径
-            
-        except Exception as e:  # 捕获保存过程中的异常
-            logging.error(f"保存截图失败: {e}")  # 记录错误日志
-            return None  # 返回None
-    
-    def perform_mouse_click(self, x: int, y: int, clicks: int = 1, interval: float = 0.1):
-        """执行鼠标点击"""
-        try:
-            pyautogui.click(x, y, clicks=clicks, interval=interval)  # 执行鼠标点击
-            logging.info(f"鼠标已点击坐标: ({x}, {y})")  # 记录信息日志
-            return True  # 返回True表示成功
-        except Exception as e:  # 捕获鼠标点击过程中的异常
-            logging.error(f"鼠标点击失败: {e}")  # 记录错误日志
-            return False  # 返回False表示失败
-    
-    def perform_keyboard_input(self, text: str):
-        """执行键盘输入"""
-        try:
-            pyautogui.typewrite(text)  # 执行键盘输入
-            logging.info(f"已输入文本: {text}")  # 记录信息日志
-            return True  # 返回True表示成功
-        except Exception as e:  # 捕获键盘输入过程中的异常
-            logging.error(f"键盘输入失败: {e}")  # 记录错误日志
-            return False  # 返回False表示失败
-    
-    def clean_old_screenshots(self, retention_hours: int = 24):
-        """清理过期截图"""
-        try:
-            cutoff_time = datetime.now() - timedelta(hours=retention_hours)  # 计算截止时间
-            deleted_count = 0  # 删除计数器
-            
-            for file_path in self.screenshot_dir.glob("*.png"):  # 遍历所有png文件
-                try:
-                    file_mtime = datetime.fromtimestamp(file_path.stat().st_mtime)  # 获取文件修改时间
-                    if file_mtime < cutoff_time:  # 如果文件修改时间早于截止时间
-                        file_path.unlink()  # 删除文件
-                        logging.info(f"已删除过期截图: {file_path}")  # 记录信息日志
-                        deleted_count += 1  # 增加删除计数
-                except (ValueError, OSError) as e:  # 捕获文件处理过程中的异常
-                    logging.warning(f"处理文件 {file_path} 时出错: {e}")  # 记录警告日志
-                    continue  # 继续处理下一个文件
-            
-            if deleted_count > 0:  # 如果有文件被删除
-                logging.info(f"清理完成，共删除 {deleted_count} 个过期文件")  # 记录信息日志
-                
-        except Exception as e:  # 捕获清理过程中的异常
-            logging.error(f"清理旧截图时出错: {e}")  # 记录错误日志
-    
-    def create_callback(self, config: RecognitionConfig) -> Callable:
-        """根据配置创建回调函数"""
-        if config.callback_type == "mouse_click":  # 如果回调类型为鼠标点击
-            return self.create_mouse_click_callback(
-                config.callback_params["x"],  # X坐标
-                config.callback_params["y"]  # Y坐标
-            )
-        elif config.callback_type == "keyboard_input":  # 如果回调类型为键盘输入
-            return self.create_keyboard_input_callback(
-                config.callback_params["text"]  # 要输入的文本
-            )
-        elif config.callback_type == "logging":  # 如果回调类型为日志记录
-            return self.create_logging_callback(
-                config.callback_params.get("message")  # 日志消息
-            )
-        else:  # 其他未知回调类型
-            # 默认日志回调
-            return self.create_logging_callback(
-                f"未知回调类型: {config.callback_type}"  # 提示未知类型
-            )
-    
-    def monitor_once(self):
-        """执行一次监控任务"""
-        try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 生成时间戳
-            logging.info(f"开始执行监控任务: {timestamp}")  # 记录信息日志
-            
-            # 对每个启用的配置进行处理
-            for config in self.recognition_configs:  # 遍历所有配置
-                logging.info(f"处理识别区域: {config.name}")  # 记录正在处理的配置
-                
-                # 1. 截图
-                img = self.capture_screen_region(config.x, config.y, config.width, config.height)  # 截取指定区域
-                if img is None:  # 如果截图失败
-                    continue  # 跳过当前配置
-                
-                # 2. 根据类型进行预处理
-                if config.type == "text":  # 如果是文字识别类型
-                    processed_img = self.preprocess_image_for_ocr(img)  # 使用OCR预处理
-                else:  # template 模板匹配类型
-                    processed_img = self.preprocess_image_for_template(img)  # 使用模板匹配预处理
-                
-                # 3. 匹配检测
-                match_found = False  # 匹配标志
-                match_value = None  # 匹配值
-                match_x = -1  # 匹配中心X坐标，初始化为-1表示无效
-                match_y = -1  # 匹配中心Y坐标，初始化为-1表示无效
-                
-                if config.type == "text":  # 文字识别
-                    # 文字识别
-                    text = self.extract_text(processed_img, config.ocr_lang)  # 执行OCR识别
-                    if text:  # 如果识别到文字
-                        logging.info(f"[{config.name}] 识别到的文字: '{text}'")  # 记录识别结果
-                        
-                        # 检查关键词匹配
-                        search_text = text if config.case_sensitive else text.lower()  # 根据是否区分大小写处理文本
-                        for keyword in config.keywords:  # 遍历关键词列表
-                            search_keyword = keyword if config.case_sensitive else keyword.lower()  # 处理关键词大小写
-                            if search_keyword in search_text:  # 检查是否包含关键词
-                                match_found = True  # 设置匹配标志
-                                match_value = text  # 保存匹配值
-                                # 计算文字识别区域的中心坐标
-                                match_x = config.x + config.width // 2
-                                match_y = config.y + config.height // 2
-                                logging.info(f"[{config.name}] 检测到关键词 '{keyword}' 坐标=({match_x}, {match_y})")
-                                break  # 找到匹配就退出循环
-                    else:  # 未识别到文字
-                        logging.info(f"[{config.name}] 未识别到有效文字")  # 记录信息日志
-                
-                elif config.type == "template":  # 模板匹配
-                    # 模板匹配
-                    if config.template_image is not None:  # 检查模板图片是否加载成功
-                        match_found, match_x, match_y = self.match_template(
-                            processed_img,  # 当前截图
-                            config.template_image,  # 模板图片
-                            config.match_threshold,  # 匹配阈值
-                            config.x,  # 传入截图区域的X偏移（用于计算屏幕绝对坐标）
-                            config.y   # 传入截图区域的Y偏移（用于计算屏幕绝对坐标）
-                        )
-                        if match_found:  # 如果匹配成功
-                            match_value = f"匹配度_{config.match_threshold}"  # 设置匹配值
-                
-                # 4. 如果匹配成功，执行回调
-                if match_found:  # 如果找到匹配
-                    context = {  # 创建上下文信息
-                        'config_name': config.name,  # 配置名称
-                        'timestamp': timestamp,  # 时间戳
-                        'match_type': config.type,  # 匹配类型
-                        'match_value': match_value,  # 匹配值
-                        'x': config.x,  # 检测区域X坐标
-                        'y': config.y,  # 检测区域Y坐标
-                        'width': config.width,  # 检测区域宽度
-                        'height': config.height,  # 检测区域高度
-                        'match_x': match_x,  # 匹配中心X坐标
-                        'match_y': match_y  # 匹配中心Y坐标
-                    }
-                    
-                    # 创建并执行回调函数
-                    callback = self.create_callback(config)  # 创建回调函数
-                    try:
-                        callback(context)  # 执行回调
-                    except Exception as e:  # 捕获回调执行过程中的异常
-                        logging.error(f"执行回调函数失败: {e}")  # 记录错误日志
-                
-                # 5. 保存截图
-                screenshot_path = self.save_screenshot(processed_img, timestamp, {
-                    'config_name': config.name,  # 配置名称
-                    'timestamp': timestamp,  # 时间戳
-                    'match_type': config.type,  # 匹配类型
-                    'match_value': match_value if match_found else 'no_match',  # 匹配值或"no_match"
-                    'match_x': match_x,  # 匹配X坐标
-                    'match_y': match_y  # 匹配Y坐标
-                })
-                if screenshot_path:  # 如果截图保存成功
-                    logging.info(f"[{config.name}] 截图已保存至: {screenshot_path}")  # 记录信息日志
-                    
-        except Exception as e:  # 捕获监控过程中的异常
-            logging.error(f"监控任务执行失败: {e}")  # 记录错误日志
-    
-    def start_cleanup_scheduler(self):
-        """启动自动清理调度器"""
-        schedule.every(GLOBAL_CONFIG["cleanup_interval_hours"]).hours.do(
-            self.clean_old_screenshots,  # 要执行的清理函数
-            retention_hours=GLOBAL_CONFIG["retention_hours"]  # 保留时间参数
-        )
-        logging.info(f"已设置自动清理任务，每 {GLOBAL_CONFIG['cleanup_interval_hours']} 小时检查一次过期文件")  # 记录信息日志
-    
-    def start_monitoring(self):
-        """开始持续监控"""
-        if not self.recognition_configs:  # 如果没有启用的配置
-            logging.warning("警告: 没有启用任何识别配置")  # 记录警告日志
-            return  # 退出函数
-        
-        logging.info(f"启动桌面监控服务，每{GLOBAL_CONFIG['monitor_interval_minutes']}分钟执行一次")  # 记录信息日志
-        logging.info(f"截图保存目录: {self.screenshot_dir.absolute()}")  # 记录截图目录
-        logging.info(f"截图保留时间: {GLOBAL_CONFIG['retention_hours']}小时")  # 记录保留时间
-        logging.info("安全模式: 启用（将鼠标移到屏幕左上角可中断程序）")  # 记录安全模式信息
-        logging.info(f"启用的识别配置数量: {len(self.recognition_configs)}")  # 记录启用的配置数量
-        
-        for config in self.recognition_configs:  # 遍历启用的配置
-            if config.type == "text":  # 文字识别配置
-                keywords_str = ", ".join(config.keywords)  # 将关键词列表转换为字符串
-                logging.info(f"  - {config.name}: ({config.x},{config.y},{config.width},{config.height}) "
-                            f"类型: 文字识别, 关键词: [{keywords_str}]")  # 记录配置信息
-            else:  # 模板匹配配置
-                logging.info(f"  - {config.name}: ({config.x},{config.y},{config.width},{config.height}) "
-                            f"类型: 模板匹配, 模板: {config.template_path}, 阈值: {config.match_threshold}")  # 记录配置信息
-        
-        logging.info("按 Ctrl+C 停止监控")  # 提示用户如何停止监控
-        
-        # 启动自动清理任务
-        self.start_cleanup_scheduler()  # 启动清理调度器
-        
-        # 立即执行第一次监控
-        self.monitor_once()  # 执行一次监控
-        
-        # 主监控循环
-        try:
-            while True:  # 无限循环
-                schedule.run_pending()  # 执行待处理的调度任务
-                time.sleep(1)  # 暂停1秒
-        except KeyboardInterrupt:  # 捕获Ctrl+C中断
-            logging.info("监控服务已停止")  # 记录信息日志
+    logging.info("日志系统初始化完成")
+    logging.debug(f"调试模式: {config.GLOBAL_CONFIG['debug_mode']}")
 
-def main():
-    """主函数"""
+# ==================== 屏幕截图功能 ====================
+
+def capture_screen(region: Dict[str, int] = None) -> Optional[Image.Image]:
+    """
+    截取屏幕指定区域
+    
+    参数:
+        region: 区域字典，包含x, y, width, height
+                如果为None，则截取全屏
+    
+    返回:
+        PIL Image对象，截取的屏幕图像
+        如果失败返回None
+    """
     try:
-        monitor = DesktopMonitor()  # 创建监控器实例
+        if region is None:
+            # 截取全屏
+            screenshot = ImageGrab.grab()
+        else:
+            # 截取指定区域
+            box = (
+                region["x"],
+                region["y"],
+                region["x"] + region["width"],
+                region["y"] + region["height"]
+            )
+            screenshot = ImageGrab.grab(bbox=box)
         
-        monitor.start_monitoring()  # 开始监控
+        # 保存截图（如果需要）
+        if config.GLOBAL_CONFIG["screenshot_dir"]:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            filename = f"screenshot_{timestamp}.png"
+            filepath = os.path.join(config.GLOBAL_CONFIG["screenshot_dir"], filename)
+            
+            # 确保目录存在
+            os.makedirs(config.GLOBAL_CONFIG["screenshot_dir"], exist_ok=True)
+            
+            # 保存截图
+            screenshot.save(filepath, quality=config.GLOBAL_CONFIG["screenshot_quality"])
+            logging.debug(f"截图已保存: {filename}")
         
-    except Exception as e:  # 捕获启动过程中的异常
-        logging.critical(f"程序启动失败: {e}")  # 记录严重错误日志
+        return screenshot
+        
+    except Exception as e:
+        logging.error(f"截图失败: {e}")
+        return None
 
-if __name__ == "__main__":  # 如果作为主程序运行
-    main()  # 执行主函数
+# ==================== 图像预处理功能 ====================
+
+def preprocess_image(image: Image.Image, preprocess_config: Dict[str, Any]) -> np.ndarray:
+    """
+    对图像进行预处理，提高OCR识别准确率
+    
+    参数:
+        image: PIL Image对象
+        preprocess_config: 预处理配置字典
+    
+    返回:
+        处理后的OpenCV图像（numpy数组）
+    """
+    try:
+        # 转换为OpenCV格式（BGR）
+        cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        
+        # 转换为灰度图
+        gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        
+        # 使用CLAHE增强对比度
+        if preprocess_config.get("enhance_contrast", False):
+            clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+            gray = clahe.apply(gray)
+
+        # 应用高斯模糊
+        if preprocess_config.get("blur", False):
+            kernel_size = preprocess_config.get("blur_kernel", 3)
+            # 确保核大小为奇数
+            kernel_size = kernel_size if kernel_size % 2 == 1 else kernel_size + 1
+            gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+        
+        # 应用阈值处理
+        if preprocess_config.get("threshold", False):
+            method = preprocess_config.get("threshold_method", "otsu")
+            
+            if method == "otsu":
+                _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)  # 注意：加了 INV
+                gray = binary
+            elif method == "fixed":
+                threshold_value = preprocess_config.get("threshold_value", 127)
+                _, binary = cv2.threshold(gray, threshold_value, 255, cv2.THRESH_BINARY_INV)  # 加了 INV
+                gray = binary
+
+        # 保存截图（如果需要）
+        if config.GLOBAL_CONFIG["screenshot_dir"]:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            filename = f"screenshot_{timestamp}.png"
+            filepath = os.path.join(config.GLOBAL_CONFIG["screenshot_dir"], filename)
+            # 确保目录存在
+            os.makedirs(config.GLOBAL_CONFIG["screenshot_dir"], exist_ok=True)
+            success = cv2.imwrite(filepath, gray)
+            if success:
+                logging.debug(f"已保存预处理后的图像: {filepath}")
+            else:
+                logging.warning(f"无法保存预处理图像，路径可能无效或磁盘错误: {filepath}")
+        else:
+            logging.warning("未指定 filepath，无法保存处理后的图像。")
+
+        return gray
+        
+    except Exception as e:
+        logging.error(f"图像预处理失败: {e}")
+        return np.array(image)
+
+# ==================== OCR文字识别 ====================
+
+def ocr_recognition(image: np.ndarray, lang: str = None) -> str:
+    """
+    使用Tesseract OCR识别图像中的文字
+    
+    参数:
+        image: OpenCV图像（numpy数组）
+        lang: OCR语言代码，如'chi_sim', 'eng'等
+              如果为None，使用全局配置
+    
+    返回:
+        识别出的文字字符串
+    """
+    try:
+        # 确定使用的语言
+        if not lang:
+            lang = config.GLOBAL_CONFIG["ocr_lang"]
+        
+        # 使用pytesseract进行OCR识别
+        text = pytesseract.image_to_string(image, lang=lang)
+        
+        # 清理识别结果
+        # 去除首尾空白字符
+        text = text.strip()
+        
+        # 替换多余的空白字符为单个空格
+        import re
+        text = re.sub(r'\s+', ' ', text)
+        
+        return text
+        
+    except Exception as e:
+        logging.error(f"OCR识别失败: {e}")
+        return ""
+
+# ==================== 模板匹配 ====================
+
+def template_match(screen_image: np.ndarray, template_path: str, threshold: float) -> Optional[Dict[str, int]]:
+    """
+    在屏幕图像中匹配模板图片
+    
+    参数:
+        screen_image: 屏幕图像（OpenCV格式）
+        template_path: 模板图片路径
+        threshold: 匹配阈值（0.0-1.0）
+    
+    返回:
+        匹配位置字典，包含'x'和'y'坐标
+        如果未找到匹配，返回None
+    """
+    try:
+        # 检查模板文件是否存在
+        if not os.path.exists(template_path):
+            logging.error(f"模板文件不存在: {template_path}")
+            return None
+        
+        # 读取模板图像
+        template = cv2.imread(template_path, 0)  # 以灰度模式读取
+        if template is None:
+            logging.error(f"无法读取模板文件: {template_path}")
+            return None
+        
+        # 获取模板尺寸
+        h, w = template.shape
+        
+        # 执行模板匹配
+        result = cv2.matchTemplate(screen_image, template, cv2.TM_CCOEFF_NORMED)
+        
+        # 找到最佳匹配位置
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        
+        # 检查匹配度是否达到阈值
+        if max_val >= threshold:
+            # 返回匹配中心点坐标
+            center_x = max_loc[0] + w // 2
+            center_y = max_loc[1] + h // 2
+            return {"x": center_x, "y": center_y}
+        else:
+            logging.debug(f"模板匹配失败，相似度: {max_val:.3f} < 阈值: {threshold}")
+            return None
+            
+    except Exception as e:
+        logging.error(f"模板匹配失败: {e}")
+        return None
+
+# ==================== 回调函数执行 ====================
+
+def execute_callback(config: Dict[str, Any], match_position: Dict[str, int] = None):
+    """
+    执行回调函数
+    
+    参数:
+        config: 包含回调配置的字典
+        match_position: 匹配到的位置坐标（用于鼠标点击等操作）
+    """
+    callback_type = config["callback_type"]
+    params = config["callback_params"]
+    
+    # 获取实际执行位置
+    exec_x, exec_y = get_execution_position(config, match_position)
+    
+    try:
+        # 根据回调类型执行不同操作
+        if callback_type == "logging":
+            message = params.get("message", f"检测成功: {config['name']}")
+            if params.get("include_coords", False) and match_position:
+                message += f" (坐标: {exec_x}, {exec_y})"
+            logging.info(message)
+            
+        elif callback_type == "mouse_click":
+            # 执行鼠标点击
+            clicks = params.get("clicks", 1)
+            interval = params.get("interval", 0.1)
+            button = params.get("button", "left")  # left, right, middle
+            
+            # 移动鼠标并点击
+            pyautogui.moveTo(exec_x, exec_y)
+            pyautogui.click(clicks=clicks, interval=interval, button=button)
+            
+            logging.info(f"执行鼠标点击: ({exec_x}, {exec_y}), {clicks}次, {button}键")
+            
+        elif callback_type == "keyboard_input":
+            # 执行键盘输入
+            text = params.get("text", "")
+            pause = params.get("pause", 0.1)
+            
+            pyautogui.typewrite(text, interval=pause)
+            logging.info(f"执行键盘输入: {text}")
+            
+        elif callback_type == "custom_script":
+            # 执行自定义Python脚本
+            script_path = params.get("script_path", "")
+            if os.path.exists(script_path):
+                try:
+                    # 动态执行脚本
+                    with open(script_path, 'r', encoding='utf-8') as f:
+                        script_code = f.read()
+                    exec(script_code, {"config": config, "position": match_position})
+                    logging.info(f"执行自定义脚本成功: {script_path}")
+                except Exception as e:
+                    logging.error(f"执行自定义脚本失败 {script_path}: {e}")
+            else:
+                logging.error(f"自定义脚本文件不存在: {script_path}")
+                
+        else:
+            logging.warning(f"未知的回调类型: {callback_type}")
+            
+    except Exception as e:
+        logging.error(f"执行回调失败 {config['name']}: {e}")
+
+def get_execution_position(config: Dict[str, Any], match_position: Dict[str, int] = None) -> tuple:
+    """
+    计算实际执行位置
+    
+    参数:
+        config: 配置字典
+        match_position: 匹配到的位置
+    
+    返回:
+        (x, y) 坐标元组
+    """
+    if match_position is None:
+        # 使用配置中的区域中心点
+        x = config["x"] + config["width"] // 2
+        y = config["y"] + config["height"] // 2
+    else:
+        # 使用匹配到的位置
+        x = match_position["x"]
+        y = match_position["y"]
+    
+    # 应用坐标偏移
+    x += config.get("coord_offset_x", 0)
+    y += config.get("coord_offset_y", 0)
+    
+    return x, y
+
+# ==================== 单个检测任务执行 ====================
+
+def execute_detection(config: Dict[str, Any], level: int = 1) -> bool:
+    """
+    执行单个检测任务
+    
+    参数:
+        config: 检测配置字典
+        level: 嵌套层级（用于日志显示）
+    
+    返回:
+        bool: 检测是否成功
+    """
+    # 生成缩进，用于日志中的层级显示
+    indent = "  " * (level - 1)
+    
+    try:
+        # 记录开始检测日志
+        logging.info(f"{indent}开始检测: {config['name']} (层级 {level})")
+        
+        # 根据检测类型执行不同操作
+        if config["type"] == "text":
+            # 文字识别检测
+            success = text_detection(config, level)
+        elif config["type"] == "template":
+            # 模板匹配检测
+            success = template_detection(config, level)
+        else:
+            logging.error(f"{indent}未知的检测类型: {config['type']}")
+            return False
+            
+        if success:
+            logging.info(f"{indent}✓ 检测成功: {config['name']}")
+            return True
+        else:
+            logging.warning(f"{indent}✗ 检测失败: {config['name']}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"{indent}检测过程中发生异常 {config['name']}: {e}", exc_info=True)
+        return False
+
+def text_detection(config: Dict[str, Any], level: int) -> bool:
+    """
+    执行文字识别检测
+    
+    参数:
+        config: 文字检测配置
+        level: 层级
+    
+    返回:
+        是否检测成功
+    """
+    indent = "  " * (level - 1)
+    
+    # 截取指定区域
+    region = {
+        "x": config["x"],
+        "y": config["y"],
+        "width": config["width"],
+        "height": config["height"]
+    }
+    
+    screenshot = capture_screen(region)
+    if screenshot is None:
+        logging.error(f"{indent}截图失败")
+        return False
+    
+    # 图像预处理
+    processed_image = preprocess_image(screenshot, config["preprocess"])
+    
+    # 确定OCR语言
+    ocr_lang = config.get("ocr_lang") or config.GLOBAL_CONFIG["ocr_lang"]
+    
+    # OCR识别
+    recognized_text = ocr_recognition(processed_image, ocr_lang)
+    
+    # === 关键修正 ===
+    # 无论匹配结果如何，都记录OCR识别结果
+    # 这样即使检测失败，我们也能看到识别出了什么
+    logging.debug(f"{indent}OCR识别结果: '{recognized_text}'")
+    
+    # 关键词匹配
+    keywords = config["keywords"]
+    case_sensitive = config["case_sensitive"]
+    
+    # 如果识别结果为空，直接返回失败
+    if not recognized_text:
+        logging.debug(f"{indent}OCR识别结果为空，检测失败")
+        return False
+    
+    # 根据是否区分大小写进行匹配
+    text_to_search = recognized_text if case_sensitive else recognized_text.lower()
+    keyword_list = keywords if case_sensitive else [k.lower() for k in keywords]
+    
+    # 检查是否包含任意关键词
+    matched = any(keyword in text_to_search for keyword in keyword_list)
+    
+    if matched:
+        # 计算匹配位置（区域中心）
+        match_position = {
+            "x": config["x"] + config["width"] // 2,
+            "y": config["y"] + config["height"] // 2
+        }
+        
+        # 执行回调
+        execute_callback(config, match_position)
+        
+        # 执行嵌套检测
+        if "nested_detection" in config:
+            nested_config = config["nested_detection"]
+            if nested_config.get("enabled", True):
+                # 递归调用嵌套检测
+                nested_success = execute_detection(nested_config, level + 1)
+                if not nested_success:
+                    return False
+        
+        return True
+    else:
+        # 即使匹配失败，我们也记录了OCR结果，便于调试
+        logging.debug(f"{indent}未找到关键词，检测失败")
+        return False
+
+def template_detection(config: Dict[str, Any], level: int) -> bool:
+    """
+    执行模板匹配检测
+    
+    参数:
+        config: 模板检测配置
+        level: 层级
+    
+    返回:
+        是否检测成功
+    """
+    indent = "  " * (level - 1)
+    
+    # 截取全屏用于模板匹配
+    full_screenshot = capture_screen()
+    if full_screenshot is None:
+        logging.error(f"{indent}全屏截图失败")
+        return False
+    
+    # 转换为灰度图
+    gray_screen = cv2.cvtColor(np.array(full_screenshot), cv2.COLOR_RGB2GRAY)
+    
+    # 执行模板匹配
+    match_result = template_match(
+        gray_screen,
+        config["template_path"],
+        config["match_threshold"]
+    )
+    
+    if match_result is None:
+        return False
+    
+    # 执行回调
+    execute_callback(config, match_result)
+    
+    # 执行嵌套检测
+    if "nested_detection" in config:
+        nested_config = config["nested_detection"]
+        if nested_config.get("enabled", True):
+            # 为嵌套检测设置正确的区域（以匹配点为中心）
+            nested_config["x"] = match_result["x"] - nested_config["width"] // 2
+            nested_config["y"] = match_result["y"] - nested_config["height"] // 2
+            
+            nested_success = execute_detection(nested_config, level + 1)
+            if not nested_success:
+                return False
+    
+    return True
+
+# ==================== 文件清理功能 ====================
+
+def cleanup_old_files():
+    """清理过期的截图文件"""
+    # 获取当前时间
+    now = datetime.now()
+    # 计算保留时间阈值
+    retention = timedelta(hours=config.GLOBAL_CONFIG["retention_hours"])
+    
+    # 检查截图目录是否存在
+    screenshot_dir = config.GLOBAL_CONFIG["screenshot_dir"]
+    if not os.path.exists(screenshot_dir):
+        os.makedirs(screenshot_dir, exist_ok=True)
+        logging.debug(f"截图目录不存在: {screenshot_dir}；生成目录")
+        return
+    
+    # 遍历目录中的所有文件
+    try:
+        for filename in os.listdir(screenshot_dir):
+            filepath = os.path.join(screenshot_dir, filename)
+            # 确保是文件（不是目录）
+            if os.path.isfile(filepath):
+                # 获取文件创建时间
+                file_time = datetime.fromtimestamp(os.path.getctime(filepath))
+                # 检查是否超过保留时间
+                if now - file_time > retention:
+                    try:
+                        os.remove(filepath)
+                        logging.info(f"已删除过期文件: {filename}")
+                    except Exception as e:
+                        logging.error(f"删除文件失败 {filename}: {e}")
+    except Exception as e:
+        logging.error(f"清理文件时发生错误: {e}")
+
+# ==================== 主监控循环 ====================
+
+def monitor_loop():
+    """主监控循环"""
+    logging.info("监控程序启动")
+    logging.info(f"配置项: {len(config.RECOGNITION_CONFIGS)} 个检测任务")
+    logging.info(f"监控间隔: {config.GLOBAL_CONFIG['monitor_interval_seconds']} 秒")
+    
+    # 记录上次执行清理任务的时间
+    last_cleanup = datetime.now()
+    
+    try:
+        while True:
+            logging.info("=" * 50)
+            logging.info("开始新一轮监控循环")
+            
+            # 执行所有启用的检测配置
+            for detection_config in config.RECOGNITION_CONFIGS:
+                if detection_config["enabled"]:
+                    # 执行单个检测任务
+                    execute_detection(detection_config)
+            
+            # 执行清理任务（按配置间隔）
+            current_time = datetime.now()
+            cleanup_interval = timedelta(minutes=config.GLOBAL_CONFIG["cleanup_interval_minutes"])
+            
+            # 检查是否需要执行清理
+            if (config.GLOBAL_CONFIG["cleanup_interval_minutes"] > 0 and 
+                current_time - last_cleanup > cleanup_interval):
+                cleanup_old_files()
+                last_cleanup = current_time
+            
+            # 等待下一次循环
+            interval = config.GLOBAL_CONFIG["monitor_interval_seconds"]
+            logging.debug(f"等待 {interval} 秒后执行下一次监控...")
+            time.sleep(interval)
+            
+    except KeyboardInterrupt:
+        logging.info("监控程序被用户中断 (Ctrl+C)")
+    except Exception as e:
+        logging.error(f"监控程序发生未预期的异常: {e}", exc_info=True)
+    finally:
+        logging.info("监控程序结束")
+
+
+def clear_previous_screenshots(screenshot_dir):
+    """
+    清除指定目录下的所有截图文件。
+    
+    参数:
+        screenshot_dir: 存储截图的目录路径
+    """
+    if os.path.exists(screenshot_dir):
+        for filename in os.listdir(screenshot_dir):
+            file_path = os.path.join(screenshot_dir, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                logging.error(f'Failed to delete {file_path}. Reason: {e}')
+    else:
+        logging.debug(f"截图目录不存在: {screenshot_dir}")
+
+# ==================== 程序入口函数 ====================
+
+def run():
+    """
+    程序入口函数
+    这是程序的主入口点
+    """
+    screenshot_dir = config.GLOBAL_CONFIG["screenshot_dir"]
+    clear_previous_screenshots(screenshot_dir)
+    # 1. 初始化日志系统
+    setup_logging()
+    
+    # 2. 启动主监控循环
+    monitor_loop()
+    
+    # 3. 程序正常退出
+    logging.info("程序退出")
+    sys.exit(0)
+
+# ==================== 程序入口点 ====================
+
+if __name__ == "__main__":
+    """
+    当直接运行main.py时的入口点
+    """
+    run()
